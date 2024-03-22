@@ -13,7 +13,10 @@ void extract(expr const & e, expr_vector* ar_formulae) {
         auto f = e.decl();
         //cout << "application of " << f.name() << f.decl_kind() << ": " << e << "\n";
         if (archeck.find(f.decl_kind()) != archeck.end()) {
-            ar_formulae->push_back(e);
+            auto e_simp = e.simplify();
+            //cout << e << endl;
+            //cout << e_simp << endl;
+            ar_formulae->push_back(e_simp);
         }
         else {
             unsigned num = e.num_args();
@@ -46,15 +49,14 @@ void tst_visit() {
     cout << *a;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     context c;
 
-    auto origin_exprs = c.parse_file("test.smt2");
+    auto origin_exprs = c.parse_file(argv[1]);
     expr_vector* arith_exprs = new expr_vector(c);
 
     for (auto e: origin_exprs) {
         extract(e, arith_exprs);
-
     }
     auto s = origin_exprs.size();
     
