@@ -10,10 +10,10 @@ OBJS = $(SRCS:.cpp=.o)
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) -lz3
+	$(CXX) $(CXXFLAGS) -o $(EXEC) $(OBJS) -lz3 `pkg-config --cflags --libs ginac`
 
 %.o: %.c
-	$(CXX) $(CXXFLAGS) -c $< -lz3
+	$(CXX) $(CXXFLAGS) -c $<
 
 clean:
 	rm -f $(OBJS) $(EXEC)

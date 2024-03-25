@@ -13,8 +13,8 @@ CVC format using CVC Lite
 (declare-fun X_2 () Int)
 (declare-fun X_3 () Int)
 (assert (>= (+ X_1 X_3 X_2 67) 0))
-(assert (>= (+ X_1 (+ X_3 X_2) 67) 0))
-(assert (> 9 (+ X_1 (+ 8 (* 2 X_3)) X_2 67)))
+(assert (>= (+ (- X_1) (+ X_3 (* (- 2) X_2)) 67) 0))
+(assert (> 9 (+ X_1 (+ 8 (* 2 X_3)) (* X_2 9) 67)))
 (assert (> (+ X_1 X_3) (+ X_1 (+ 8 (* 2 X_3)) X_2 67)))
 
 (check-sat)
