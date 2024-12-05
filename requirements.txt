@@ -1,0 +1,5 @@
+numpy==2.1.3
+pyformlang==1.0.7
+pynini==2.1.6.post1
+sympy==1.13.3
+z3_solver==4.13.2.0
