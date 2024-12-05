@@ -249,7 +249,7 @@ def transform_string(filename):
     s1.add(exprs)
     #s1.set("timeout", 60)
     #t0 = time.time()
-    or_result = s1.check()
+    #or_result = s1.check()
     #t1 = time.time()
     #or_time = t1-t0
     str_exprs, chs = extract(exprs)
@@ -273,66 +273,65 @@ def transform_string(filename):
     #print("chars: ", list(chs))
     #char_set.update(string.ascii_letters)
     #print("var_lst: ", str_exprs_var_lst)
+    exprs_new = exprs
+    if (len(str_exprs_var_lst) != 0):
+        tv = []
+        len_translate = random.randint(0, 5)
+        len_scale = random.randint(1, 5)
+        fst = gen_rand_len_fst_by_state(list(chs), translate = len_translate, scale = len_scale)
+        #re_fst = []
+        #print(fst)
+        for str_expr in str_exprs:
+            if (z3.is_string_value(str_expr.arg(0))):
+                #print(list((str(str_expr.arg(0)).strip(' " ') @ fst).paths().ostrings()))
+                tv.append(list((str(str_expr.arg(0)).strip(' " ') @ fst).paths().ostrings())[0])
+            elif (z3.is_string_value(str_expr.arg(1))):
+                #print(list((str(str_expr.arg(1)).strip(' " ') @ fst).paths().ostrings()))
+                tv.append(list((str(str_expr.arg(1)).strip(' " ') @ fst).paths().ostrings())[0])
+            elif (z3.is_re(str_expr.arg(1))):
+                #print("isre: ", str_expr.arg(1))
+                #print("pat: ", "".join(re_parse(str_expr.arg(1))))
+                #re_fst.append(re_to_fst(str_expr.arg(1)))
+                or_fst = re_to_fst(str_expr.arg(1))
+                tr_fst = pn.compose(or_fst, fst).optimize().project("output")
+                fst_to_z3 = parse_fst_str(str(draw(tr_fst)), c)
+                #print("transfer re to z3: ", str_expr.arg(1), " to ", fst_to_z3)
+                tv.append(fst_to_z3)
 
-    tv = []
-    len_translate = random.randint(0, 5)
-    len_scale = random.randint(1, 5)
-    fst = gen_rand_len_fst_by_state(list(chs), translate = len_translate, scale = len_scale)
-    #re_fst = []
-    #print(fst)
-    for str_expr in str_exprs:
-        if (z3.is_string_value(str_expr.arg(0))):
-            #print(list((str(str_expr.arg(0)).strip(' " ') @ fst).paths().ostrings()))
-            tv.append(list((str(str_expr.arg(0)).strip(' " ') @ fst).paths().ostrings())[0])
-        elif (z3.is_string_value(str_expr.arg(1))):
-            #print(list((str(str_expr.arg(1)).strip(' " ') @ fst).paths().ostrings()))
-            tv.append(list((str(str_expr.arg(1)).strip(' " ') @ fst).paths().ostrings())[0])
-        elif (z3.is_re(str_expr.arg(1))):
-            #print("isre: ", str_expr.arg(1))
-            #print("pat: ", "".join(re_parse(str_expr.arg(1))))
-            #re_fst.append(re_to_fst(str_expr.arg(1)))
-            or_fst = re_to_fst(str_expr.arg(1))
-            tr_fst = pn.compose(or_fst, fst).optimize().project("output")
-            fst_to_z3 = parse_fst_str(str(draw(tr_fst)), c)
-            #print("transfer re to z3: ", str_expr.arg(1), " to ", fst_to_z3)
-            tv.append(fst_to_z3)
-
-        elif (z3.is_re(str_expr.arg(0))):
-            #print("isre: ", str_expr.arg(0))
-            #print("pat: ", "".join(re_parse(str_expr.arg(0))))
-            #re_fst.append(re_to_fst(str_expr.arg(0)))
-            or_fst = re_to_fst(str_expr.arg(0))
-            tr_fst = pn.compose(or_fst, fst).optimize().project("output")
-            fst_to_z3 = parse_fst_str(str(draw(tr_fst)), c)
-            #print("transfer re to z3: ", str_expr.arg(0), " to ", fst_to_z3)
-            tv.append(fst_to_z3)
-        else:
-            print("nothing=========================")
-
-
-    #print("tv", tv)
-    #print("len check: ", len(str_exprs_var_lst) == len(str_exprs) and len(str_exprs) == len(tv))
+            elif (z3.is_re(str_expr.arg(0))):
+                #print("isre: ", str_expr.arg(0))
+                #print("pat: ", "".join(re_parse(str_expr.arg(0))))
+                #re_fst.append(re_to_fst(str_expr.arg(0)))
+                or_fst = re_to_fst(str_expr.arg(0))
+                tr_fst = pn.compose(or_fst, fst).optimize().project("output")
+                fst_to_z3 = parse_fst_str(str(draw(tr_fst)), c)
+                #print("transfer re to z3: ", str_expr.arg(0), " to ", fst_to_z3)
+                tv.append(fst_to_z3)
+            else:
+                print("nothing=========================")
 
 
-    s_substitute = []
-    for i in range(len(str_exprs_var_lst)):
-        if(z3.is_re(tv[i]) and z3.is_re(str_exprs[i].arg(1))):
-            s_substitute.append((str_exprs[i].arg(1), tv[i]))
-        else:
-            s_substitute.append((str_exprs[i], str_exprs_var_lst[i] == tv[i]))
+        #print("tv", tv)
+        #print("len check: ", len(str_exprs_var_lst) == len(str_exprs) and len(str_exprs) == len(tv))
 
-    unique_var_lst = (list(set(str_exprs_var_lst)))
-    #print("ulst: ", unique_var_lst)
 
-    l_substitute = []
-    for i in range(len(unique_var_lst)):
-            l_substitute.append((z3.Length(unique_var_lst[i]), (z3.Length(unique_var_lst[i]) - len_translate) / len_scale))
-    #print("l sub: ", l_substitute)
-    
+        s_substitute = []
+        for i in range(len(str_exprs_var_lst)):
+            if(z3.is_re(tv[i]) and z3.is_re(str_exprs[i].arg(1))):
+                s_substitute.append((str_exprs[i].arg(1), tv[i]))
+            else:
+                s_substitute.append((str_exprs[i], str_exprs_var_lst[i] == tv[i]))
 
-    exprs_new = [z3.substitute(expr, s_substitute) for expr in exprs]
-    exprs_new = [z3.substitute(expr, l_substitute) for expr in exprs_new]
-    print(exprs_new)
+        unique_var_lst = (list(set(str_exprs_var_lst)))
+        #print("ulst: ", unique_var_lst)
+
+        l_substitute = []
+        for i in range(len(unique_var_lst)):
+                l_substitute.append((z3.Length(unique_var_lst[i]), (z3.Length(unique_var_lst[i]) - len_translate) / len_scale))
+        #print("l sub: ", l_substitute)
+        exprs_new = [z3.substitute(expr, s_substitute) for expr in exprs]
+        exprs_new = [z3.substitute(expr, l_substitute) for expr in exprs_new]
+        #print(exprs_new)
     ar_vars = exprs_get_arith_vars(exprs_new)
     Q, Q_inv = uni_matrix_gen(len(ar_vars))
     r = rand_vector_gen(len(ar_vars))
@@ -539,7 +538,7 @@ if __name__ == '__main__':
     
     try:
         f = open(sys.argv[2], 'w')
-        print(transform_smt2(sys.argv[1]), file = f)
+        print(transform_string(sys.argv[1]), file = f)
         f.close()    
-    except:
-        print("error, transforming file: ", sys.argv[1])
+    except Exception as e:
+        print("error, transforming file: ", e)
