@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from sympy.polys.polyoptions import Symbols
 from timeit import default_timer as timer
 from pyformlang.finite_automaton import EpsilonNFA, State, Symbol, Epsilon
@@ -402,26 +401,15 @@ def parse_fst_str(fstr, c):
     return z3_re
 
 def Minus(re1: z3.ReRef, re2: z3.ReRef) -> z3.ReRef:
-    """
-    The Z3 regex matching all strings accepted by re1 but not re2.
-    Formatted in camelcase to mimic Z3 regex API.
-    """
     return z3.Intersect(re1, z3.Complement(re2))
 
 
 def AnyChar(c) -> z3.ReRef:
-    """
-    The Z3 regex matching any character (currently only ASCII supported).
-    Formatted in camelcase to mimic Z3 regex API.
-    """
     return z3.Range(chr(0), chr(127), ctx = c)
     # return z3.AllChar(z3.StringSort())
 
 
 def category_regex(category: sre_constants._NamedIntConstant, c) -> z3.ReRef:
-    """
-    Defines regex categories in Z3.
-    """
     if sre_constants.CATEGORY_DIGIT == category:
         return z3.Range("0", "9", ctx = c)
     elif sre_constants.CATEGORY_SPACE == category:
@@ -439,9 +427,6 @@ def category_regex(category: sre_constants._NamedIntConstant, c) -> z3.ReRef:
 
 
 def regex_construct_to_z3_expr(regex_construct, c) -> z3.ReRef:
-    """
-    Translates a specific regex construct into its Z3 equivalent.
-    """
     node_type, node_value = regex_construct
     if sre_constants.LITERAL == node_type:  # a
         return z3.Re(chr(node_value), ctx = c)
@@ -530,10 +515,6 @@ def regex_construct_to_z3_expr(regex_construct, c) -> z3.ReRef:
 
 
 def regex_to_z3_expr(regex: sre_parse.SubPattern, c) -> z3.ReRef:
-    """
-    Translates a parsed regex into its Z3 equivalent.
-    The parsed regex is a sequence of regex constructs (literals, *, +, etc.)
-    """
     if 0 == len(regex.data):
         raise ValueError("ERROR: regex is empty")
     elif 1 == len(regex.data):
